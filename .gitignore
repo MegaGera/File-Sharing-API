@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Storage
+# Ignore all files in storage/files directory but keep the .gitkeep file
+app/storage/files/*
+!app/storage/files/.gitkeep
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+# For now ignore tests directory
+/tests
+

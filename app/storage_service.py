@@ -39,17 +39,14 @@ class StorageService:
         """Upload a file and save its metadata.
         
         Args:
-            file: The uploaded file
+            file: The uploaded file (validated by FastAPI)
             
         Returns:
             FileMetadata object with file information
             
         Raises:
             HTTPException: If file is missing or too large
-        """
-        if not file.filename:
-            raise HTTPException(status_code=400, detail="No file provided")
-        
+        """        
         # Read file content to check size
         content = file.file.read()
         file_size = len(content)

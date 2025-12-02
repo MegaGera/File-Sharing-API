@@ -22,7 +22,7 @@ async def upload_file(file: UploadFile = File(...)):
         FileMetadata with file ID and information
         
     Raises:
-        HTTPException: 400 if no file provided, 413 if file too large
+        HTTPException: 422 if no file provided (FastAPI validation), 413 if file too large
     """
     try:
         metadata = storage_service.upload_file(file)

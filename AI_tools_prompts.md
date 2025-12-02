@@ -1,3 +1,4 @@
+# Prompt 1 - ChatGPT: Ensure Analysis and Design
 
 After analysis I made this question to ChatGPT to ensure the design:
 
@@ -43,4 +44,26 @@ Initial analysis:
    - STORAGE_PATH
    - METADATA_FILE
    - MAX_FILE_SIZE
+```
+
+# Prompt 2 - Cursor: Build basic structure of the project
+
+Build the project files structure after design phase is finished:
+
+```
+This file @initial_analysis_and_design.md contains the  initial analysis and design I did for a Software task assignment I need to develop a minimal and lightweight file-sharing API that supports uploads and downloads, storesfiles on disk, read metadata list of files, and makes it easy to retrieve shared files via a simple HTTP endpoint.
+
+Can you help me to build the basic structure of the project based on the content of the file?
+```
+
+# Prompt 3 - Cursor: Update README.md
+
+Update README.md after build phase 2:
+
+```
+Can you update the @README.md file with:
+
+- Testing part with the actual tests I have implemented.
+- Create a section about the Makefile.
+- Add a Phase 2 in the Building Process of what I did in this phase.
 ```

@@ -18,6 +18,3 @@ app/storage/files/*
 .pytest_cache/
 .coverage
 htmlcov/
-# For now ignore tests directory
-/tests
-

@@ -67,3 +67,11 @@ Can you update the @README.md file with:
 - Create a section about the Makefile.
 - Add a Phase 2 in the Building Process of what I did in this phase.
 ```
+
+# Prompt 4 - Cursor: Metadata validation Testing
+
+Add metadata validation and 3 new tests:
+
+```
+In @storage_service.py (98-121) in the functions "get_all_metadata" and "get_file_metadata" if the metadata doesn't match the model it gets a 500 internal server error. I want to handle it properly, don't break the server and add new Tests to verify the workflow, can you help me with this?
+```

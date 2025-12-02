@@ -43,6 +43,147 @@ In this phase, comprehensive testing infrastructure was implemented along with D
 
 Then, I updated this README.md file using Cursor AI tool with the prompt #3 in the file [AI_tools_prompts.md](AI_tools_prompts.md#prompt-3---cursor-update-readmemd)
 
+### Phase 3: Metadata validation Testing
+
+In this phase I added a metadata validation handling exception in case the metadata JSON is not correctly stored. In that case, when listing metadata it will skip the invalid objects and when getting a file with invalid metadata it will return a 404 error code (not found). I added 3 more tests to validate this behaviour:
+
+- `test_list_files_with_invalid_metadata`: Verifies that invalid entries are skipped when listing files
+- `test_get_file_metadata_with_invalid_entry`: Verifies that invalid metadata returns 404
+- `test_list_files_mixed_valid_invalid_metadata`: Verifies that valid entries are still returned when mixed with invalid ones
+
+I added this validation and the new tests asking Cursor with the prompt #4 in the file [AI_tools_prompts.md](AI_tools_prompts.md#prompt-4---cursor-metadata-validation-testing)
+
+### Task Questions
+
+#### What happens if something goes wrong during a request? How does the API communicate this to a client?
+
+The API uses FastAPI's built-in error handling mechanism with `HTTPException` to communicate errors to clients. Errors are returned as JSON responses with appropriate HTTP status codes:
+
+- **422 Unprocessable Entity**: Validation errors (e.g., no file provided in upload request). FastAPI automatically validates request parameters and returns detailed validation error messages.
+
+- **413 Payload Too Large**: File size exceeds the 20MB limit. The error message includes details about the maximum allowed size.
+
+- **404 Not Found**: Requested file ID doesn't exist or has invalid metadata. Returns a JSON response with a descriptive error message.
+
+- **500 Internal Server Error**: Unexpected server errors during file operations. Includes error details in the response.
+
+All error responses follow FastAPI's standard error format:
+```json
+{
+  "detail": "Error message describing what went wrong"
+}
+```
+
+The API also handles edge cases gracefully:
+- Invalid metadata entries are automatically skipped when listing files
+- Missing or corrupted metadata files are handled without crashing the service
+- File validation ensures data integrity before storing
+
+#### How can you confirm the code works?
+
+The codebase includes a comprehensive test suite using `pytest` and FastAPI's `TestClient`. To confirm the code works:
+
+1. **Run all tests using Makefile**:
+   ```bash
+   make test
+   ```
+
+2. **Run tests directly with pytest**:
+   ```bash
+   pytest
+   pytest -v  # for verbose output
+   ```
+
+The test suite (`tests/test_api.py`) covers:
+- ✅ All API endpoints (root, upload, download, list)
+- ✅ Success scenarios with proper data validation
+- ✅ Error handling (422, 413, 404, 500)
+- ✅ Edge cases (empty file lists, invalid metadata, missing files)
+- ✅ Test isolation using temporary storage directories
+
+All tests use pytest fixtures to ensure complete isolation - each test runs with its own temporary storage, preventing interference between test runs and with actual application data.
+
+#### How can someone else run and test the API quickly?
+
+There are multiple quick ways to run and test the API:
+
+**Option 1: Docker with Makefile (Recommended - Fastest)**
+
+```bash
+# Build and run the container
+make build
+make run-d    # Runs in background
+
+# Or run in foreground to see logs
+make run
+```
+
+The API will be available at `http://localhost:8000`
+
+**Option 2: Docker commands directly**
+
+```bash
+docker build -t file-sharing-api .
+docker run -p 8000:8000 file-sharing-api
+```
+
+**Option 3: Local Python setup**
+
+```bash
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the server
+uvicorn app.main:app --reload
+```
+
+**Testing the API:**
+
+Once running, you can test it in several ways:
+
+1. **Interactive API Documentation** (Swagger UI):
+   - Visit `http://localhost:8000/docs` in your browser
+   - Test all endpoints directly from the browser interface
+   - Upload, download, and list files with a user-friendly UI
+
+2. **Command line with curl**:
+   ```bash
+   # Upload a file
+   curl -X POST "http://localhost:8000/files" \
+        -F "file=@/path/to/your/file.txt"
+   
+   # List all files
+   curl http://localhost:8000/files
+   
+   # Download a file (replace FILE_ID with actual ID)
+   curl http://localhost:8000/files/FILE_ID --output downloaded_file.txt
+   ```
+
+3. **Run the test suite**:
+   ```bash
+   make test
+   ```
+
+### Notes, Considerations and Future Updates
+
+- I chose to build the task with Python and FastAPI due to the technical requeriments of the position/offer
+- I store the metadata in a simple JSON file because is enough for a minimal app like this task
+- When storing the files I change the names in disk to be the new generated UUID. With this approach multiple files with the same name can be uploaded
+- I chose Docker and Makefile to simplify development and deploying and improve scalability and maintainability
+
+#### Future Updates
+
+- Delete file
+- Logging for all operations. New file/table with the logs
+- Public/Private keys for authentication
+- History of downloads of the files by different users
+- Add metadata in a DB instead of simple JSON file. Run app and DB with docker-compose
+- Serverless file to deploy in file with, for example AWS, S3 for file storage, DynamoDB for metadata storage, and API Gateway with Lambda for running the API and the file storage logic
+
 ## Features
 
 - **Upload Files**: Upload files with automatic metadata generation
@@ -291,3 +432,6 @@ The test suite (`tests/test_api.py`) includes the following test cases:
 
 All tests use pytest fixtures to set up isolated temporary storage directories, ensuring tests don't interfere with each other or the actual application storage.
 
+## Author
+
+Gonzalo Berné - gonzalo.berne@gmail.com

@@ -119,6 +119,13 @@ docker build -t file-sharing-api .
 docker run -p 8000:8000 file-sharing-api
 ```
 
+Or use the Makefile:
+```bash
+make build
+make run        # Run in foreground
+make run-d      # Run in background (detached)
+```
+
 The API will be available at `http://localhost:8000`
 
 ## Project Structure

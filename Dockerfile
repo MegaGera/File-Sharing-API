@@ -12,6 +12,9 @@ COPY app/ ./app/
 # Create storage directories
 RUN mkdir -p app/storage/files
 
+# Define volume for persistent storage
+VOLUME ["/app/app/storage"]
+
 # Expose port
 EXPOSE 8000
 

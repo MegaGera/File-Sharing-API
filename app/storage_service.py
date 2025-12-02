@@ -5,6 +5,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
 from fastapi import HTTPException, UploadFile
+from pydantic import ValidationError
 
 from app.config import STORAGE_PATH, METADATA_FILE, MAX_FILE_SIZE
 from app.models import FileMetadata
@@ -99,10 +100,17 @@ class StorageService:
         """Get metadata for all files.
         
         Returns:
-            List of FileMetadata objects
+            List of FileMetadata objects (invalid entries are skipped)
         """
         metadata_list = self._read_metadata()
-        return [FileMetadata(**item) for item in metadata_list]
+        valid_metadata = []
+        for item in metadata_list:
+            try:
+                valid_metadata.append(FileMetadata(**item))
+            except ValidationError:
+                # Skip invalid metadata entries silently
+                continue
+        return valid_metadata
     
     def get_file_metadata(self, file_id: str) -> Optional[FileMetadata]:
         """Get metadata for a specific file.
@@ -111,11 +119,15 @@ class StorageService:
             file_id: The file ID
             
         Returns:
-            FileMetadata if found, None otherwise
+            FileMetadata if found and valid, None otherwise
         """
         metadata_list = self._read_metadata()
         for item in metadata_list:
             if item.get('id') == file_id:
-                return FileMetadata(**item)
+                try:
+                    return FileMetadata(**item)
+                except ValidationError:
+                    # Return None for invalid metadata entries
+                    return None
         return None
 

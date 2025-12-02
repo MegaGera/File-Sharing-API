@@ -1,7 +1,9 @@
 """Tests for the file-sharing API using FastAPI TestClient."""
+import json
 import pytest
 from fastapi.testclient import TestClient
 import shutil
+from datetime import datetime
 
 from app.main import app
 
@@ -117,4 +119,110 @@ def test_download_file_not_found():
     response = client.get("/files/non-existent-id")
     assert response.status_code == 404
     assert "not found" in response.json()["detail"].lower()
+
+
+def test_list_files_with_invalid_metadata():
+    """Test listing files when metadata contains invalid entries."""
+    import app.storage_service
+    
+    # Write invalid metadata directly to the file
+    invalid_metadata = [
+        {
+            "id": "valid-id-1",
+            "file_name": "valid.txt",
+            "size": 100,
+            "timestamp": datetime.now().isoformat()
+        },
+        {
+            "id": "invalid-id-1",
+            # Missing required fields
+            "file_name": "invalid.txt"
+        },
+        {
+            "id": "invalid-id-2",
+            "file_name": "invalid2.txt",
+            "size": "not-a-number",  # Wrong type
+            "timestamp": datetime.now().isoformat()
+        },
+        {
+            "id": "valid-id-2",
+            "file_name": "valid2.txt",
+            "size": 200,
+            "timestamp": datetime.now().isoformat()
+        }
+    ]
+    
+    with open(app.storage_service.METADATA_FILE, 'w') as f:
+        json.dump(invalid_metadata, f, indent=2)
+    
+    # List files - should only return valid entries
+    response = client.get("/files")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 2  # Only valid entries
+    assert data[0]["id"] == "valid-id-1"
+    assert data[1]["id"] == "valid-id-2"
+
+
+def test_get_file_metadata_with_invalid_entry():
+    """Test getting file metadata when the entry is invalid."""
+    import app.storage_service
+    
+    # Write invalid metadata for a specific file (using the patched path from fixture)
+    invalid_metadata = [
+        {
+            "id": "invalid-file-id",
+            "file_name": "invalid.txt",
+            # Missing required 'size' and 'timestamp' fields
+        }
+    ]
+    
+    with open(app.storage_service.METADATA_FILE, 'w') as f:
+        json.dump(invalid_metadata, f, indent=2)
+    
+    # Try to download the file - should return 404 because metadata is invalid
+    response = client.get("/files/invalid-file-id")
+    assert response.status_code == 404
+    assert "not found" in response.json()["detail"].lower()
+
+
+def test_list_files_mixed_valid_invalid_metadata():
+    """Test that valid entries are returned even when some entries are invalid."""
+    import app.storage_service
+    
+    # Upload a valid file first
+    test_content = b"Valid file content"
+    files = {"file": ("valid.txt", test_content, "text/plain")}
+    upload_response = client.post("/files", files=files)
+    assert upload_response.status_code == 201
+    valid_file_id = upload_response.json()["id"]
+    
+    # Read current metadata and add invalid entries (using the patched path from fixture)
+    with open(app.storage_service.METADATA_FILE, 'r') as f:
+        metadata_list = json.load(f)
+    
+    # Add invalid entries
+    metadata_list.extend([
+        {
+            "id": "invalid-1",
+            # Missing required fields
+        },
+        {
+            "id": "invalid-2",
+            "file_name": "bad.txt",
+            "size": "not-a-number",
+            "timestamp": "not-a-date"
+        }
+    ])
+    
+    with open(app.storage_service.METADATA_FILE, 'w') as f:
+        json.dump(metadata_list, f, indent=2)
+    
+    # List files - should only return the valid entry
+    response = client.get("/files")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["id"] == valid_file_id
+    assert data[0]["file_name"] == "valid.txt"
 

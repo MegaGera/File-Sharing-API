@@ -430,6 +430,11 @@ The test suite (`tests/test_api.py`) includes the following test cases:
 - **test_download_file_success**: Tests successful file download by file ID, verifying file content matches uploaded content
 - **test_download_file_not_found**: Tests download endpoint error handling for non-existent file IDs (404 status)
 
+#### Metadata Validation Tests
+- **test_list_files_with_invalid_metadata**: Verifies that invalid metadata entries are skipped when listing files, ensuring only valid entries are returned
+- **test_get_file_metadata_with_invalid_entry**: Verifies that files with invalid metadata return a 404 error (not found) when attempting to download
+- **test_list_files_mixed_valid_invalid_metadata**: Verifies that valid metadata entries are still returned correctly when mixed with invalid entries in the metadata file
+
 All tests use pytest fixtures to set up isolated temporary storage directories, ensuring tests don't interfere with each other or the actual application storage.
 
 ## Author
